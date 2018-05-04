@@ -14,13 +14,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
     var callObserver: CXCallObserver!   // add
-
+    var bgTask = UIBackgroundTaskIdentifier()   // add
+    
+    
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         
         // add
         callObserver = CXCallObserver()
         callObserver.setDelegate(self, queue: nil)
+        // callObserver.setDelegate(self, queue: DispatchQueue(label: "com.taka2488.app.queue1"))    // 画面キャプチャを取る場合はメインスレッドじゃないとダメ
         // add
         
         return true
@@ -34,6 +37,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func applicationDidEnterBackground(_ application: UIApplication) {
         // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
         // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
+
+        self.bgTask = UIApplication.shared.beginBackgroundTask(expirationHandler: {
+            UIApplication.shared.endBackgroundTask(self.bgTask)
+            self.bgTask = UIBackgroundTaskInvalid
+        })
+
     }
 
     func applicationWillEnterForeground(_ application: UIApplication) {
@@ -48,6 +57,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
     }
     
+    
+    private func getScreenShot() -> UIImage {
+        let rect = self.window?.bounds
+        UIGraphicsBeginImageContextWithOptions((rect?.size)!, false, 0.0)
+        let context: CGContext = UIGraphicsGetCurrentContext()!
+        self.window?.layer.render(in: context)
+        let capturedImage : UIImage = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+        
+        return capturedImage
+    }
+    
 }
 
 // add
@@ -55,14 +76,28 @@ extension AppDelegate: CXCallObserverDelegate {
     func callObserver(_ callObserver: CXCallObserver, callChanged call: CXCall) {
         if call.hasEnded == true {
             print("Disconnected")
+
+            // capture
+            let captureImage = getScreenShot() as UIImage
+            print("capture image")
+  
+            //キャプチャ画像をフォトアルバムへ保存
+            UIImageWriteToSavedPhotosAlbum(captureImage, nil, nil, nil);
         }
         if call.isOutgoing == true && call.hasConnected == false {
             print("Dialing")
         }
         if call.isOutgoing == false && call.hasConnected == false && call.hasEnded == false {
             print("Incoming")
+            
+            // capture
+            let captureImage = getScreenShot() as UIImage
+            print("capture image")
+            
+            //キャプチャ画像をフォトアルバムへ保存
+            UIImageWriteToSavedPhotosAlbum(captureImage, nil, nil, nil);
+
         }
-        
         if call.hasConnected == true && call.hasEnded == false {
             print("Connected")
         }
