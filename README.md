@@ -9,4 +9,5 @@ callkitを使用して着信のイベントをアプリで取得し、着信画�
 
 ## Enviroment
 * iPhone7
-* iOS 11.3.1
+* iOS 11.3.4
+* Swift4
